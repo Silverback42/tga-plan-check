@@ -55,13 +55,13 @@
 
 ## Phase 5 — PDF-Extraktion (MVP-Kern)
 
-- [ ] `parsers/pdf_anlagen.py`: PyMuPDF-Wrapper für Text + Position pro Seite
-- [ ] Anlagen-Label-Extraktion via Regex (analog AKS-Export, aber gewerk-agnostisch)
-- [ ] Raum-Code-Extraktion (Raumstempel-Heuristik)
-- [ ] Service `extraction_service.py` orchestriert Parser pro Upload
-- [ ] Router `extraction.py`: `POST /projects/{id}/extract` startet Task
-- [ ] Test mit echtem Schema-PDF: extrahierte Anlagen in DB sichtbar
-- [ ] Test mit echtem Grundriss-PDF: extrahierte Anlagen in DB sichtbar
+- [x] `parsers/pdf_anlagen.py`: PyMuPDF-Wrapper für Text + Position pro Seite
+- [x] Anlagen-Label-Extraktion via Regex (analog AKS-Export, aber gewerk-agnostisch)
+- [x] Raum-Code-Extraktion (Raumstempel-Heuristik)
+- [x] Service `extraction_service.py` orchestriert Parser pro Upload
+- [x] Router `extraction.py`: `POST /projects/{id}/extract` startet Task
+- [x] Test mit echtem Schema-PDF: extrahierte Anlagen in DB sichtbar
+- [x] Test mit echtem Grundriss-PDF: extrahierte Anlagen in DB sichtbar
 
 ## Phase 6 — Normalisierung + Fuzzy-Matching
 
