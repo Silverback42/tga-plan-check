@@ -26,15 +26,15 @@
 
 ## Phase 2 — Backend-Skeleton
 
-- [ ] Python-Projekt initialisieren (`pyproject.toml` oder `requirements.txt`)
-- [ ] Virtuelle Umgebung anlegen (`.venv`)
-- [ ] Dependencies installieren: fastapi, uvicorn, sqlalchemy, pydantic, pymupdf, openpyxl, rapidfuzz, python-multipart, alembic
-- [ ] Verzeichnisstruktur anlegen: `backend/app/{routers,services,parsers,matching,reporting,tasks}`
-- [ ] `backend/app/main.py` mit FastAPI-Instanz + CORS
-- [ ] `backend/app/config.py` mit Settings (DB-URL, Upload-Pfad, Threshold)
-- [ ] `backend/app/database.py` mit SQLAlchemy-Engine + Session
-- [ ] Health-Check-Endpunkt `GET /health`
-- [ ] Server lokal starten und Health-Check verifizieren
+- [x] Python-Projekt initialisieren (`pyproject.toml` oder `requirements.txt`)
+- [x] Virtuelle Umgebung anlegen (`.venv`)
+- [x] Dependencies installieren: fastapi, uvicorn, sqlalchemy, pydantic, pymupdf, openpyxl, rapidfuzz, python-multipart, alembic
+- [x] Verzeichnisstruktur anlegen: `backend/app/{routers,services,parsers,matching,reporting,tasks}`
+- [x] `backend/app/main.py` mit FastAPI-Instanz + CORS
+- [x] `backend/app/config.py` mit Settings (DB-URL, Upload-Pfad, Threshold)
+- [x] `backend/app/database.py` mit SQLAlchemy-Engine + Session
+- [x] Health-Check-Endpunkt `GET /health`
+- [x] Server lokal starten und Health-Check verifizieren
 
 ## Phase 3 — Datenmodelle
 
