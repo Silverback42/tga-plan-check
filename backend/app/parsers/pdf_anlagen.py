@@ -10,6 +10,7 @@ import logging
 import math
 import re
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterable
 
@@ -195,18 +196,20 @@ def _process_page(
             )
         )
 
-    # 2) Raum-Codes ueber alle Worte sammeln
-    for x0, y0, x1, y1, word, *_ in words:
+    # 2) Raum-Codes ueber Einzel- und Paar-Tokens sammeln. So wird auch
+    #    "R 1024" als Paar-Token erkannt.
+    pair_tokens = _iter_word_and_pair_tokens(words)
+    for token_text, x0, y0, x1, y1 in pair_tokens:
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
         for rx in room_regexes:
-            m = rx.search(word)
+            m = rx.search(token_text)
             if m:
                 rooms.append(_RoomLocation(m.group(0), page_index, cx, cy))
                 break
 
     # 3) Shortcode-Anlagen: ueber Einzel-Wort UND ueber Paare aufeinanderfolgender
     #    Worte ("P" + "03" -> "P03"). Erkennt sowohl "P03" als auch "P 03".
-    for token_text, x0, y0, x1, y1 in _iter_word_and_pair_tokens(words):
+    for token_text, x0, y0, x1, y1 in pair_tokens:
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
 
         m = _PATTERN_SHORTCODE.fullmatch(token_text)
@@ -280,24 +283,44 @@ def _extract_inner_code(label: str) -> str:
     return f"{m.group('prefix').lower()}{m.group('num')}{(m.group('suffix') or '').lower()}"
 
 
-def _find_volltext_anlagen(text: str) -> list[tuple[str, str, int]]:
-    """Findet Volltext-Anlagen-Begriffe und liefert (label, typ, start_offset)."""
-    hits: list[tuple[str, str, int]] = []
-    lower = text.lower()
+@lru_cache(maxsize=1)
+def _compiled_volltext_patterns() -> tuple[tuple[re.Pattern[str], str], ...]:
+    """Compiled Pattern pro Volltext-Begriff mit linker und rechter Boundary.
+
+    Links: Wortanfang oder Nicht-Buchstabe (verhindert Matches mitten in
+    Komposita wie "Lueftungsgeraetekompressor"). Rechts: Nicht-Buchstabe
+    (Whitespace, Bindestrich, Satzzeichen, EOF).
+    """
+    patterns: list[tuple[re.Pattern[str], str]] = []
     for begriff, typ in _VOLLTEXT_BEGRIFFE.items():
-        start = 0
-        while True:
-            idx = lower.find(begriff, start)
-            if idx < 0:
-                break
-            # Originaler Casing-Text aus dem PDF
-            original = text[idx : idx + len(begriff)]
-            # Optional: nachfolgender Code (z.B. "Lueftungsgeraet LG-01")
-            tail = text[idx + len(begriff) : idx + len(begriff) + 20]
-            code_match = re.match(r"\s+([A-Z]{1,4}[\s\-]?\d{1,3}[a-z]?)", tail)
+        regex = re.compile(
+            r"(?:^|(?<=[^A-Za-zÄÖÜäöüß]))"
+            + re.escape(begriff)
+            + r"(?=[^A-Za-zÄÖÜäöüß]|$)",
+            flags=re.IGNORECASE,
+        )
+        patterns.append((regex, typ))
+    return tuple(patterns)
+
+
+_CODE_TAIL = re.compile(r"\s+([A-Z]{1,4}[\s\-]?\d{1,3}[a-z]?)")
+
+
+def _find_volltext_anlagen(text: str) -> list[tuple[str, str, int]]:
+    """Findet Volltext-Anlagen-Begriffe und liefert (label, typ, start_offset).
+
+    Boundary-Check verhindert Substring-Matches innerhalb deutscher Komposita.
+    """
+    hits: list[tuple[str, str, int]] = []
+    for regex, typ in _compiled_volltext_patterns():
+        for match in regex.finditer(text):
+            idx = match.start()
+            end = match.end()
+            original = text[idx:end]
+            tail = text[end : end + 20]
+            code_match = _CODE_TAIL.match(tail)
             label = original + (code_match.group(0) if code_match else "")
             hits.append((label.strip(), typ, idx))
-            start = idx + len(begriff)
     return hits
 
 

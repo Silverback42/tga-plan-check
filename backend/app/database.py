@@ -15,14 +15,13 @@ _settings = get_settings()
 # SQLite braucht check_same_thread=False fuer FastAPI
 _connect_args = (
     {"check_same_thread": False}
-    if _settings.database_url.startswith("sqlite")
+    if _settings.database_url.lower().startswith("sqlite")
     else {}
 )
 
 engine = create_engine(
     _settings.database_url,
     connect_args=_connect_args,
-    future=True,
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

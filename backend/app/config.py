@@ -1,8 +1,11 @@
+import logging
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 # Anker fuer relative Pfade: backend/ (zwei Ebenen ueber dieser Datei)
 BACKEND_ROOT = Path(__file__).resolve().parent.parent
@@ -38,8 +41,10 @@ class Settings(BaseSettings):
     # Matching-Defaults
     fuzzy_threshold_default: int = Field(default=85, ge=0, le=100)
 
-    # CORS — Frontend-Origin im Dev-Modus
-    cors_origins: list[str] = ["http://localhost:5173"]
+    # CORS — leer per Default; muss pro Umgebung explizit gesetzt werden.
+    # Wildcard "*" wird abgewiesen, weil wir CORS in Verbindung mit anderen
+    # Features (z.B. spaeter Auth) sicher gestalten muessen.
+    cors_origins: list[str] = []
 
     @field_validator("data_dir", "upload_dir", "report_dir", "intermediate_dir")
     @classmethod
@@ -49,11 +54,12 @@ class Settings(BaseSettings):
     @field_validator("database_url")
     @classmethod
     def _resolve_sqlite_url(cls, value: str) -> str:
-        # Nur SQLite-URLs mit relativem Pfad umschreiben
-        prefix = "sqlite:///"
-        if not value.startswith(prefix):
+        # Nur SQLite-URLs mit relativem Pfad umschreiben (case-insensitive,
+        # damit "SQLite:///" oder "SQLITE:///" ebenfalls erkannt werden)
+        if not value.lower().startswith("sqlite:///"):
             return value
-        raw_path = value[len(prefix):]
+        prefix_len = len("sqlite:///")
+        raw_path = value[prefix_len:]
         # In-Memory ("sqlite:///:memory:") unveraendert lassen
         if raw_path.startswith(":"):
             return value
@@ -61,7 +67,43 @@ class Settings(BaseSettings):
             return value
         absolute = _resolve_path(raw_path)
         # SQLAlchemy erwartet POSIX-Slashes
-        return f"{prefix}{absolute.as_posix()}"
+        return f"sqlite:///{absolute.as_posix()}"
+
+    @field_validator("cors_origins")
+    @classmethod
+    def _reject_wildcard(cls, value: list[str]) -> list[str]:
+        if "*" in value:
+            raise ValueError(
+                "cors_origins darf '*' nicht enthalten (Konflikt mit credentials)."
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _ensure_directories_exist(self) -> "Settings":
+        for directory in (
+            self.data_dir,
+            self.upload_dir,
+            self.report_dir,
+            self.intermediate_dir,
+        ):
+            directory.mkdir(parents=True, exist_ok=True)
+        return self
+
+    @model_validator(mode="after")
+    def _warn_localhost_in_production(self) -> "Settings":
+        if not self.debug:
+            unsafe = [
+                o
+                for o in self.cors_origins
+                if "localhost" in o or "127.0.0.1" in o
+            ]
+            if unsafe:
+                logger.warning(
+                    "Production-Konfiguration enthaelt Localhost-Origins in "
+                    "cors_origins: %s",
+                    unsafe,
+                )
+        return self
 
 
 @lru_cache

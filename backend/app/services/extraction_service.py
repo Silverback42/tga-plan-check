@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from sqlalchemy.orm import Session
@@ -13,6 +13,11 @@ from app.models import Anlage, Project, Task, TaskStatus, TaskType, Upload
 from app.parsers.pdf_anlagen import extract_anlagen
 
 logger = logging.getLogger(__name__)
+
+
+def _utc_now_naive() -> datetime:
+    """Liefert die aktuelle UTC-Zeit als naive datetime (passend zur DB-Spalte)."""
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def _room_patterns_from_project(project: Project) -> list[str] | None:
@@ -39,11 +44,12 @@ def run_extraction(db: Session, project_id: int) -> Task:
         project_id=project_id,
         task_type=TaskType.extract,
         status=TaskStatus.running,
-        started_at=datetime.utcnow(),
+        started_at=_utc_now_naive(),
     )
     db.add(task)
     db.commit()
     db.refresh(task)
+    task_id = task.id
 
     try:
         room_patterns = _room_patterns_from_project(project)
@@ -60,7 +66,7 @@ def run_extraction(db: Session, project_id: int) -> Task:
 
         task.status = TaskStatus.success
         task.progress = 1.0
-        task.finished_at = datetime.utcnow()
+        task.finished_at = _utc_now_naive()
         task.result_path = None
         db.add(task)
         db.commit()
@@ -73,12 +79,18 @@ def run_extraction(db: Session, project_id: int) -> Task:
         )
     except Exception as exc:  # noqa: BLE001 — Fehler in Task-Status festhalten
         logger.exception("Extraction fehlgeschlagen")
-        task.status = TaskStatus.failed
-        task.error_message = f"{type(exc).__name__}: {exc}"
-        task.finished_at = datetime.utcnow()
-        db.add(task)
-        db.commit()
-        db.refresh(task)
+        # Pending Inserts/Deletes aus _process_uploads verwerfen, damit nur
+        # der Task-Update persistiert wird.
+        db.rollback()
+        db_task = db.get(Task, task_id)
+        if db_task is not None:
+            db_task.status = TaskStatus.failed
+            db_task.error_message = f"{type(exc).__name__}: {exc}"
+            db_task.finished_at = _utc_now_naive()
+            db.add(db_task)
+            db.commit()
+            db.refresh(db_task)
+            task = db_task
         raise
 
     return task

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
 import uuid
 from pathlib import Path
 
@@ -26,8 +25,11 @@ router = APIRouter(prefix="/projects/{project_id}/uploads", tags=["uploads"])
 
 # MVP: maximale Dateigroesse 50 MB
 MAX_UPLOAD_SIZE = 50 * 1024 * 1024
+_CHUNK_SIZE = 1024 * 1024
+_PDF_MAGIC = b"%PDF-"
 # Erlaubte Content-Types — octet-stream und None werden toleriert, weil viele Clients
 # (z.B. PowerShell, einige Browser) PDFs ohne korrekten Mimetype hochladen.
+# Magic-Byte-Check (siehe _validate_pdf) verhindert Spoofing per Dateiname.
 ACCEPTED_PDF_MIMES = {
     "application/pdf",
     "application/x-pdf",
@@ -39,7 +41,7 @@ ACCEPTED_PDF_MIMES = {
 
 
 def _validate_pdf(file: UploadFile) -> None:
-    """Stellt sicher, dass die hochgeladene Datei ein PDF ist."""
+    """Validiert Dateiname, Content-Type und PDF-Magic-Bytes."""
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -52,6 +54,15 @@ def _validate_pdf(file: UploadFile) -> None:
                 f"Content-Type {file.content_type!r} ist nicht erlaubt. "
                 "MVP akzeptiert nur PDF."
             ),
+        )
+
+    # Magic-Bytes-Check: PDFs beginnen mit "%PDF-"
+    header = file.file.read(len(_PDF_MAGIC))
+    file.file.seek(0)
+    if not header.startswith(_PDF_MAGIC):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Datei enthaelt keine gueltige PDF-Signatur.",
         )
 
 
@@ -83,24 +94,35 @@ def upload_plan(
     _validate_pdf(file)
 
     target = _target_path(project_id, file.filename or "upload.pdf")
+    file_size = 0
     try:
         with target.open("wb") as out:
-            shutil.copyfileobj(file.file, out, length=1024 * 1024)
+            while True:
+                chunk = file.file.read(_CHUNK_SIZE)
+                if not chunk:
+                    break
+                file_size += len(chunk)
+                if file_size > MAX_UPLOAD_SIZE:
+                    out.close()
+                    target.unlink(missing_ok=True)
+                    raise HTTPException(
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail=(
+                            f"Datei ueberschreitet das Limit von "
+                            f"{MAX_UPLOAD_SIZE} Bytes."
+                        ),
+                    )
+                out.write(chunk)
+    except HTTPException:
+        raise
     except OSError as exc:
+        target.unlink(missing_ok=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Datei konnte nicht gespeichert werden: {exc}",
         ) from exc
     finally:
         file.file.close()
-
-    file_size = target.stat().st_size
-    if file_size > MAX_UPLOAD_SIZE:
-        target.unlink(missing_ok=True)
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"Datei ueberschreitet das Limit von {MAX_UPLOAD_SIZE} Bytes.",
-        )
 
     upload = Upload(
         project_id=project_id,

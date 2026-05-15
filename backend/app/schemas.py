@@ -60,7 +60,7 @@ class UploadRead(BaseModel):
     source_type: SourceType
     plan_type: PlanType
     gewerk: Gewerk
-    file_path: str
+    # file_path bewusst nicht exponiert — interner Pfad bleibt im Modell.
     file_size: int | None
     uploaded_at: datetime
 

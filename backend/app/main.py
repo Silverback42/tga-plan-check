@@ -15,7 +15,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
-    allow_credentials=True,
+    # MVP hat keine Cookie-basierte Authentifizierung. Bei spaeterer Einfuehrung
+    # explizit auf True schalten und Origins streng pruefen.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
