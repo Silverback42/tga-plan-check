@@ -38,12 +38,12 @@
 
 ## Phase 3 — Datenmodelle
 
-- [ ] `models.py`: `Project`, `Upload`, `Task` definieren
-- [ ] `models.py`: `Anlage`, `MatchPair`, `DiffEntry` definieren
-- [ ] `schemas.py`: Pydantic Create/Read-Schemas spiegeln
-- [ ] Alembic initialisieren + erste Migration generieren
-- [ ] Migration anwenden (lokale SQLite-DB)
-- [ ] Smoke-Test: DB-Verbindung + leere Tabellen-Abfrage
+- [x] `models.py`: `Project`, `Upload`, `Task` definieren
+- [x] `models.py`: `Anlage`, `MatchPair`, `DiffEntry` definieren
+- [x] `schemas.py`: Pydantic Create/Read-Schemas spiegeln
+- [x] Alembic initialisieren + erste Migration generieren
+- [x] Migration anwenden (lokale SQLite-DB)
+- [x] Smoke-Test: DB-Verbindung + leere Tabellen-Abfrage
 
 ## Phase 4 — Upload + Project Management (CRUD)
 
