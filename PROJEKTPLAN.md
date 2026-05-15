@@ -47,11 +47,11 @@
 
 ## Phase 4 — Upload + Project Management (CRUD)
 
-- [ ] Router `projects.py`: POST/GET für Projekte
-- [ ] Router `uploads.py`: Multipart-Upload für PDFs
-- [ ] File-Storage: Dateien in `backend/data/uploads/{project_id}/` ablegen
-- [ ] Validation: nur PDF erlauben (MVP), Dateigröße prüfen
-- [ ] Einfacher curl-Test: Projekt anlegen + PDF hochladen
+- [x] Router `projects.py`: POST/GET für Projekte
+- [x] Router `uploads.py`: Multipart-Upload für PDFs
+- [x] File-Storage: Dateien in `backend/data/uploads/{project_id}/` ablegen
+- [x] Validation: nur PDF erlauben (MVP), Dateigröße prüfen
+- [x] Einfacher curl-Test: Projekt anlegen + PDF hochladen
 
 ## Phase 5 — PDF-Extraktion (MVP-Kern)
 
