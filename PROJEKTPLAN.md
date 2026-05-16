@@ -26,42 +26,42 @@
 
 ## Phase 2 — Backend-Skeleton
 
-- [ ] Python-Projekt initialisieren (`pyproject.toml` oder `requirements.txt`)
-- [ ] Virtuelle Umgebung anlegen (`.venv`)
-- [ ] Dependencies installieren: fastapi, uvicorn, sqlalchemy, pydantic, pymupdf, openpyxl, rapidfuzz, python-multipart, alembic
-- [ ] Verzeichnisstruktur anlegen: `backend/app/{routers,services,parsers,matching,reporting,tasks}`
-- [ ] `backend/app/main.py` mit FastAPI-Instanz + CORS
-- [ ] `backend/app/config.py` mit Settings (DB-URL, Upload-Pfad, Threshold)
-- [ ] `backend/app/database.py` mit SQLAlchemy-Engine + Session
-- [ ] Health-Check-Endpunkt `GET /health`
-- [ ] Server lokal starten und Health-Check verifizieren
+- [x] Python-Projekt initialisieren (`pyproject.toml` oder `requirements.txt`)
+- [x] Virtuelle Umgebung anlegen (`.venv`)
+- [x] Dependencies installieren: fastapi, uvicorn, sqlalchemy, pydantic, pymupdf, openpyxl, rapidfuzz, python-multipart, alembic
+- [x] Verzeichnisstruktur anlegen: `backend/app/{routers,services,parsers,matching,reporting,tasks}`
+- [x] `backend/app/main.py` mit FastAPI-Instanz + CORS
+- [x] `backend/app/config.py` mit Settings (DB-URL, Upload-Pfad, Threshold)
+- [x] `backend/app/database.py` mit SQLAlchemy-Engine + Session
+- [x] Health-Check-Endpunkt `GET /health`
+- [x] Server lokal starten und Health-Check verifizieren
 
 ## Phase 3 — Datenmodelle
 
-- [ ] `models.py`: `Project`, `Upload`, `Task` definieren
-- [ ] `models.py`: `Anlage`, `MatchPair`, `DiffEntry` definieren
-- [ ] `schemas.py`: Pydantic Create/Read-Schemas spiegeln
-- [ ] Alembic initialisieren + erste Migration generieren
-- [ ] Migration anwenden (lokale SQLite-DB)
-- [ ] Smoke-Test: DB-Verbindung + leere Tabellen-Abfrage
+- [x] `models.py`: `Project`, `Upload`, `Task` definieren
+- [x] `models.py`: `Anlage`, `MatchPair`, `DiffEntry` definieren
+- [x] `schemas.py`: Pydantic Create/Read-Schemas spiegeln
+- [x] Alembic initialisieren + erste Migration generieren
+- [x] Migration anwenden (lokale SQLite-DB)
+- [x] Smoke-Test: DB-Verbindung + leere Tabellen-Abfrage
 
 ## Phase 4 — Upload + Project Management (CRUD)
 
-- [ ] Router `projects.py`: POST/GET für Projekte
-- [ ] Router `uploads.py`: Multipart-Upload für PDFs
-- [ ] File-Storage: Dateien in `backend/data/uploads/{project_id}/` ablegen
-- [ ] Validation: nur PDF erlauben (MVP), Dateigröße prüfen
-- [ ] Einfacher curl-Test: Projekt anlegen + PDF hochladen
+- [x] Router `projects.py`: POST/GET für Projekte
+- [x] Router `uploads.py`: Multipart-Upload für PDFs
+- [x] File-Storage: Dateien in `backend/data/uploads/{project_id}/` ablegen
+- [x] Validation: nur PDF erlauben (MVP), Dateigröße prüfen
+- [x] Einfacher curl-Test: Projekt anlegen + PDF hochladen
 
 ## Phase 5 — PDF-Extraktion (MVP-Kern)
 
-- [ ] `parsers/pdf_anlagen.py`: PyMuPDF-Wrapper für Text + Position pro Seite
-- [ ] Anlagen-Label-Extraktion via Regex (analog AKS-Export, aber gewerk-agnostisch)
-- [ ] Raum-Code-Extraktion (Raumstempel-Heuristik)
-- [ ] Service `extraction_service.py` orchestriert Parser pro Upload
-- [ ] Router `extraction.py`: `POST /projects/{id}/extract` startet Task
-- [ ] Test mit echtem Schema-PDF: extrahierte Anlagen in DB sichtbar
-- [ ] Test mit echtem Grundriss-PDF: extrahierte Anlagen in DB sichtbar
+- [x] `parsers/pdf_anlagen.py`: PyMuPDF-Wrapper für Text + Position pro Seite
+- [x] Anlagen-Label-Extraktion via Regex (analog AKS-Export, aber gewerk-agnostisch)
+- [x] Raum-Code-Extraktion (Raumstempel-Heuristik)
+- [x] Service `extraction_service.py` orchestriert Parser pro Upload
+- [x] Router `extraction.py`: `POST /projects/{id}/extract` startet Task
+- [x] Test mit echtem Schema-PDF: extrahierte Anlagen in DB sichtbar
+- [x] Test mit echtem Grundriss-PDF: extrahierte Anlagen in DB sichtbar
 
 ## Phase 6 — Normalisierung + Fuzzy-Matching
 
