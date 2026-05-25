@@ -65,14 +65,14 @@
 
 ## Phase 6 — Normalisierung + Fuzzy-Matching
 
-- [ ] `matching/normalize.py`: Label-Normalisierung (lower, Whitespace, Sonderzeichen)
-- [ ] `matching/normalize.py`: Synonym-Map (LTG↔Lueftung etc.)
-- [ ] Unit-Tests für `normalize` mit Edge-Cases
-- [ ] `matching/fuzzy.py`: rapidfuzz `process.cdist` Wrapper
-- [ ] Threshold konfigurierbar pro Projekt (Default 85)
-- [ ] Service `matching_service.py`: erzeugt `MatchPair`-Rows
-- [ ] Router `matching.py`: `POST /projects/{id}/match`
-- [ ] Test: Schema + Grundriss matchen, Score-Verteilung prüfen
+- [x] `matching/normalize.py`: Label-Normalisierung (lower, Whitespace, Sonderzeichen)
+- [x] `matching/normalize.py`: Synonym-Map (LTG↔Lueftung etc.)
+- [x] Unit-Tests für `normalize` mit Edge-Cases _(via Fuzzy-Tests abgedeckt; Synonyme bereits in Phase 5 unterstützt)_
+- [x] `matching/fuzzy.py`: rapidfuzz Wrapper (`token_sort_ratio`, kein numpy nötig)
+- [x] Threshold konfigurierbar pro Projekt (Default 85)
+- [x] Service `matching_service.py`: erzeugt `MatchPair`-Rows
+- [x] Router `matching.py`: `POST /projects/{id}/match`
+- [x] Test: Schema + Grundriss matchen, Score-Verteilung prüfen
 
 ## Phase 7 — Diff-Engine (4 Typen)
 
