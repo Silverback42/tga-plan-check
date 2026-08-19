@@ -146,15 +146,19 @@ def compute_diff(
     ``pairs`` darf 1:n sein — pro Schema-Anlage wird das beste Paar gewaehlt.
     """
     active = [p for p in pairs if _is_active(p)]
-    matched_schema_ids = {p.schema_anlage_id for p in active}
-    matched_grundriss_ids = {p.grundriss_anlage_id for p in active}
+    # Nur das je Schema-Anlage gewaehlte Paar gilt als Zuordnung. Eine
+    # Grundriss-Anlage, die die Auswahl verliert, bleibt unzugeordnet und
+    # muss weiterhin als only_grundriss auftauchen.
+    selected = list(_best_pairs_by_schema(active).values())
+    matched_schema_ids = {p.schema_anlage_id for p in selected}
+    matched_grundriss_ids = {p.grundriss_anlage_id for p in selected}
 
     results: list[DiffResult] = []
     results.extend(find_only_schema(schema, matched_schema_ids))
     results.extend(find_only_grundriss(grundriss, matched_grundriss_ids))
 
     by_id = {a.id: a for a in list(schema) + list(grundriss)}
-    for pair in _best_pairs_by_schema(active).values():
+    for pair in selected:
         s_anlage = by_id.get(pair.schema_anlage_id)
         g_anlage = by_id.get(pair.grundriss_anlage_id)
         if s_anlage is None or g_anlage is None:

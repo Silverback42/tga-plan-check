@@ -16,7 +16,7 @@ router = APIRouter(tags=["diff"])
 @router.post(
     "/projects/{project_id}/diff",
     response_model=TaskRead,
-    status_code=status.HTTP_202_ACCEPTED,
+    status_code=status.HTTP_200_OK,
 )
 def start_diff(project_id: int, db: Session = Depends(get_db)) -> Task:
     """Berechnet alle Diff-Typen fuer ein Projekt.

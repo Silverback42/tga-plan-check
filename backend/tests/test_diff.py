@@ -184,8 +184,34 @@ def test_compute_diff_waehlt_bestes_paar_bei_1_zu_n():
 
     # Bestes Paar (101) hat gleichen Raum -> kein room_mismatch
     assert _by_type(results, DiffType.room_mismatch) == []
-    # 102 ist ueber ein Pair referenziert und damit nicht "only_grundriss"
-    assert _by_type(results, DiffType.only_grundriss) == []
+    # 102 verliert die Auswahl und bleibt damit unzugeordnet
+    only_g = _by_type(results, DiffType.only_grundriss)
+    assert [r.anlage_ref_id for r in only_g] == [102]
+
+
+def test_compute_diff_tiebreak_waehlt_kleinere_grundriss_id():
+    """Bei gleichem Score entscheidet die kleinere Grundriss-Id (deterministisch)."""
+    schema = [_StubAnlage(id=1, room_code="E.801")]
+    grundriss = [
+        _StubAnlage(id=101, room_code="EG.111"),  # gewinnt (kleinere Id)
+        _StubAnlage(id=102, room_code="EG.222"),
+    ]
+    # Reihenfolge bewusst umgekehrt: die kleinere Id kommt zuletzt
+    pairs = [
+        _StubPair(schema_anlage_id=1, grundriss_anlage_id=102, score=90.0),
+        _StubPair(schema_anlage_id=1, grundriss_anlage_id=101, score=90.0),
+    ]
+
+    results = compute_diff(schema, grundriss, pairs)
+
+    # Gewaehlt wurde 101 -> room_mismatch verweist auf dessen Raum
+    mismatches = _by_type(results, DiffType.room_mismatch)
+    assert len(mismatches) == 1
+    assert mismatches[0].partner_ref_id == 101
+    assert mismatches[0].details["grundriss_wert"] == "EG.111"
+    # 102 hat die Auswahl verloren und bleibt unzugeordnet
+    only_g = _by_type(results, DiffType.only_grundriss)
+    assert [r.anlage_ref_id for r in only_g] == [102]
 
 
 def test_compute_diff_leere_eingaben():
