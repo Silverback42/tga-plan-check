@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.routers import diff, extraction, matching, projects, uploads
+from app.routers import diff, extraction, matching, projects, reports, uploads
 
 settings = get_settings()
 
@@ -27,6 +27,7 @@ app.include_router(uploads.router)
 app.include_router(extraction.router)
 app.include_router(matching.router)
 app.include_router(diff.router)
+app.include_router(reports.router)
 
 
 @app.get("/health", tags=["meta"])
