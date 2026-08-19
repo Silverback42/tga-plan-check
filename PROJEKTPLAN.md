@@ -96,14 +96,14 @@
 
 ## Phase 9 — Frontend-Skeleton
 
-- [ ] Vite + React + TypeScript + Tailwind initialisieren in `frontend/`
-- [ ] Router + Layout-Komponenten (Sidebar/Header)
-- [ ] API-Client (`fetch` oder axios) mit TypeScript-Typen
-- [ ] `ProjectListPage` + `ProjectCreatePage`
-- [ ] `UploadPage` mit Drag&Drop (react-dropzone)
-- [ ] `ExtractionPage` mit Tabelle der extrahierten Anlagen
-- [ ] `DiffPage` mit Tabs pro Diff-Typ
-- [ ] `ReportsPage` mit Excel-Download
+- [x] Vite + React + TypeScript + Tailwind initialisieren in `frontend/`
+- [x] Router + Layout-Komponenten (Sidebar/Header)
+- [x] API-Client (`fetch` oder axios) mit TypeScript-Typen
+- [x] `ProjectListPage` + `ProjectCreatePage`
+- [x] `UploadPage` mit Drag&Drop (react-dropzone)
+- [x] `ExtractionPage` mit Tabelle der extrahierten Anlagen
+- [x] `DiffPage` mit Tabs pro Diff-Typ
+- [x] `ReportsPage` mit Excel-Download
 
 ## Phase 10 — End-to-End-Test (MVP)
 

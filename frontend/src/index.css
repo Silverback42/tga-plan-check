@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Grundlayout: volle Hoehe fuer das Sidebar-Layout */
+html,
+body,
+#root {
+  height: 100%;
+}
