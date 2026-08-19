@@ -81,8 +81,23 @@ def run_matching(db: Session, project_id: int) -> Task:
     return task
 
 
+def _lock_project(db: Session, project_id: int) -> None:
+    """Sperrt die Project-Row, damit parallele Matching-Laeufe serialisiert werden.
+
+    Der Lock wird bis zum Commit/Rollback der Transaktion gehalten. SQLite kennt
+    kein SELECT ... FOR UPDATE; dort serialisiert bereits die Write-Transaktion
+    der Datenbank selbst.
+    """
+    if db.bind.dialect.name == "sqlite":
+        return
+    db.query(Project).filter(Project.id == project_id).with_for_update().one()
+
+
 def _run_matching(db: Session, project: Project) -> int:
     """Loescht alte auto-Pairs und erzeugt neue, gruppiert nach Gewerk."""
+    # Serialisiert konkurrierende Laeufe, bevor bestehende Pairs geloescht werden
+    _lock_project(db, project.id)
+
     # Nur status=auto entfernen, damit manuelle Reviews erhalten bleiben
     db.query(MatchPair).filter(
         MatchPair.project_id == project.id,
