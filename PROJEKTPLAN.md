@@ -86,13 +86,13 @@
 
 ## Phase 8 — Excel-Report
 
-- [ ] `reporting/excel.py`: openpyxl Multi-Sheet-Export
-- [ ] Sheet 1: Zusammenfassung (Counts pro Diff-Typ, Gewerk)
-- [ ] Sheet 2: Nur-Schema-Anlagen
-- [ ] Sheet 3: Nur-Grundriss-Anlagen
-- [ ] Sheet 4: Attribut-/Raum-Diff
-- [ ] Service `report_service.py` + Router `reports.py`
-- [ ] Download-Endpunkt + manuelle Verifikation
+- [x] `reporting/excel.py`: openpyxl Multi-Sheet-Export
+- [x] Sheet 1: Zusammenfassung (Counts pro Diff-Typ, Gewerk)
+- [x] Sheet 2: Nur-Schema-Anlagen
+- [x] Sheet 3: Nur-Grundriss-Anlagen
+- [x] Sheet 4: Attribut-/Raum-Diff
+- [x] Service `report_service.py` + Router `reports.py`
+- [x] Download-Endpunkt + manuelle Verifikation
 
 ## Phase 9 — Frontend-Skeleton
 
