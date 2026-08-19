@@ -76,13 +76,13 @@
 
 ## Phase 7 — Diff-Engine (4 Typen)
 
-- [ ] `matching/diff.py`: Logik für `only_schema` (ungematchte Schema-Anlagen)
-- [ ] `matching/diff.py`: Logik für `only_grundriss` (ungematchte Grundriss-Anlagen)
-- [ ] `matching/diff.py`: Logik für `attr_mismatch` (matched + Attribut-Δ)
-- [ ] `matching/diff.py`: Logik für `room_mismatch` (matched + Raum-Δ)
-- [ ] Unit-Tests für jeden Diff-Typ mit Fixtures
-- [ ] Service `diff_service.py`: erzeugt `DiffEntry`-Rows
-- [ ] Router `diff.py`: `POST /projects/{id}/diff` + `GET /projects/{id}/diff`
+- [x] `matching/diff.py`: Logik für `only_schema` (ungematchte Schema-Anlagen)
+- [x] `matching/diff.py`: Logik für `only_grundriss` (ungematchte Grundriss-Anlagen)
+- [x] `matching/diff.py`: Logik für `attr_mismatch` (matched + Attribut-Δ)
+- [x] `matching/diff.py`: Logik für `room_mismatch` (matched + Raum-Δ)
+- [x] Unit-Tests für jeden Diff-Typ mit Fixtures
+- [x] Service `diff_service.py`: erzeugt `DiffEntry`-Rows
+- [x] Router `diff.py`: `POST /projects/{id}/diff` + `GET /projects/{id}/diff`
 
 ## Phase 8 — Excel-Report
 
