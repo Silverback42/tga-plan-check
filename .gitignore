@@ -53,3 +53,4 @@ backend/data/intermediates/
 # Tests
 .coverage
 htmlcov/
+.gstack/
