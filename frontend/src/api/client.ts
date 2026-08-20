@@ -56,6 +56,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw error
   }
 
+  return parseResponse<T>(response)
+}
+
+/** Wandelt eine erfolgreiche Antwort in Nutzdaten — 204 liefert bewusst nichts. */
+async function parseResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new ApiError(await extractErrorMessage(response), response.status)
   }

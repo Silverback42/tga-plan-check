@@ -8,6 +8,17 @@ import { ProjectListPage } from './pages/ProjectListPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { UploadPage } from './pages/UploadPage'
 
+/** Projekt-Routen teilen sich das Layout inkl. Projekt-Navigation. */
+const projectRoutes = (
+  <Route path="/projects/:projectId" element={<Layout />}>
+    <Route index element={<Navigate to="uploads" replace />} />
+    <Route path="uploads" element={<UploadPage />} />
+    <Route path="anlagen" element={<ExtractionPage />} />
+    <Route path="diff" element={<DiffPage />} />
+    <Route path="report" element={<ReportsPage />} />
+  </Route>
+)
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -16,16 +27,7 @@ export default function App() {
           <Route path="/" element={<ProjectListPage />} />
           <Route path="/projects/new" element={<ProjectCreatePage />} />
         </Route>
-
-        {/* Projekt-Routen teilen sich das Layout inkl. Projekt-Navigation */}
-        <Route path="/projects/:projectId" element={<Layout />}>
-          <Route index element={<Navigate to="uploads" replace />} />
-          <Route path="uploads" element={<UploadPage />} />
-          <Route path="anlagen" element={<ExtractionPage />} />
-          <Route path="diff" element={<DiffPage />} />
-          <Route path="report" element={<ReportsPage />} />
-        </Route>
-
+        {projectRoutes}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

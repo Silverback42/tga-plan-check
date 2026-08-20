@@ -1,32 +1,45 @@
-# React + TypeScript + Vite
+# TGA Plan Check — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React-Oberflaeche fuer den Abgleich von TGA-Schemas und Grundrissen. Die
+Anwendung ist eine reine Client-App; alle Daten kommen aus dem FastAPI-Backend
+in `../backend`.
 
-Currently, two official plugins are available:
+## Voraussetzungen
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 20 oder neuer
+- Laufendes Backend auf `http://127.0.0.1:8000` (siehe `../README.md`)
 
-## React Compiler
+## Backend-Anbindung
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Der Vite-Dev-Server proxied `/api` an das Backend und entfernt dabei das
+Prefix (siehe `vite.config.ts`) — im Browser ist deshalb keine
+CORS-Konfiguration noetig. Fuer abweichende Deployments laesst sich die
+Basis-URL ueber die Umgebungsvariable `VITE_API_BASE_URL` setzen; ohne
+Angabe wird `/api` verwendet.
 
-## Expanding the Oxlint configuration
+## Routen
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+| Pfad | Seite |
+| --- | --- |
+| `/` | Projektliste |
+| `/projects/new` | Neues Projekt anlegen |
+| `/projects/:projectId/uploads` | Plaene hochladen |
+| `/projects/:projectId/anlagen` | Extrahierte Anlagen |
+| `/projects/:projectId/diff` | Matching und Abgleich |
+| `/projects/:projectId/report` | Excel-Report erzeugen und laden |
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+Unbekannte Pfade leiten auf die Projektliste um. Routen mit ungueltiger
+`projectId` zeigen einen Hinweis statt eine Anfrage mit `NaN` zu senden.
+
+## Befehle
+
+```bash
+npm install      # Abhaengigkeiten installieren
+npm run dev      # Dev-Server mit HMR
+npm run build    # Typpruefung (tsc -b) und Produktions-Build
+npm run lint     # Oxlint
+npm run preview  # Produktions-Build lokal ausliefern
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm run build` und `npm run lint` sind die Pruefungen, die vor jedem Commit
+laufen sollten.
