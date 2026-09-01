@@ -19,24 +19,27 @@ export function useAsync<T>(loader: () => Promise<T>, deps: unknown[]): AsyncSta
   const run = useCallback(loader, deps)
 
   useEffect(() => {
-    let active = true
-    setLoading(true)
-    setError(null)
+    // isActive verhindert setState nach Unmount bzw. bei veralteten Antworten
+    let isActive = true
 
-    run()
-      .then((result) => {
-        if (active) setData(result)
-      })
-      .catch((cause: unknown) => {
-        if (active) setError(cause instanceof Error ? cause.message : String(cause))
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const result = await run()
+        if (isActive) setData(result)
+      } catch (cause) {
+        if (isActive) {
+          setError(cause instanceof Error ? cause.message : String(cause))
+        }
+      } finally {
+        if (isActive) setLoading(false)
+      }
+    }
 
-    // Verhindert setState nach Unmount bzw. bei veralteten Antworten
+    void load()
     return () => {
-      active = false
+      isActive = false
     }
   }, [run, tick])
 

@@ -1,12 +1,21 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 
 import { createReport, reportDownloadUrl } from '../api/client'
-import { ErrorMessage } from '../components/Feedback'
+import { ErrorMessage, InvalidProjectId } from '../components/Feedback'
+import { useProjectId } from '../hooks/useProjectId'
+
+const buttonClass =
+  'rounded-md border px-4 py-2 text-sm font-medium'
 
 export function ReportsPage() {
-  const { projectId } = useParams<{ projectId: string }>()
-  const id = Number(projectId)
+  const projectId = useProjectId()
+  if (projectId === null) {
+    return <InvalidProjectId />
+  }
+  return <ReportsView projectId={projectId} />
+}
+
+function ReportsView({ projectId }: { projectId: number }) {
   const [busy, setBusy] = useState(false)
   const [ready, setReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -15,7 +24,7 @@ export function ReportsPage() {
     setBusy(true)
     setError(null)
     try {
-      await createReport(id)
+      await createReport(projectId)
       setReady(true)
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause))
@@ -43,18 +52,34 @@ export function ReportsPage() {
           {busy ? 'Report wird erzeugt…' : 'Report erzeugen'}
         </button>
 
-        <a
-          href={reportDownloadUrl(id)}
-          className={[
-            'rounded-md border px-4 py-2 text-sm font-medium',
-            ready
-              ? 'border-slate-300 text-slate-700 hover:bg-slate-50'
-              : 'pointer-events-none border-slate-200 text-slate-400',
-          ].join(' ')}
-        >
-          Excel herunterladen
-        </a>
+        <DownloadLink projectId={projectId} ready={ready} />
       </div>
     </section>
+  )
+}
+
+/**
+ * Ohne fertigen Report wird bewusst kein <a href> gerendert: ein Link mit
+ * pointer-events-none bliebe per Tastatur weiterhin aktivierbar.
+ */
+function DownloadLink({ projectId, ready }: { projectId: number; ready: boolean }) {
+  if (!ready) {
+    return (
+      <span
+        aria-disabled="true"
+        className={`${buttonClass} border-slate-200 text-slate-400`}
+      >
+        Excel herunterladen
+      </span>
+    )
+  }
+
+  return (
+    <a
+      href={reportDownloadUrl(projectId)}
+      className={`${buttonClass} border-slate-300 text-slate-700 hover:bg-slate-50`}
+    >
+      Excel herunterladen
+    </a>
   )
 }

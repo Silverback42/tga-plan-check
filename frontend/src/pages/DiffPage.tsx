@@ -1,10 +1,15 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
 
 import { getDiffSummary, listDiff, startDiff, startMatching } from '../api/client'
-import { EmptyState, ErrorMessage, Loading } from '../components/Feedback'
+import {
+  EmptyState,
+  ErrorMessage,
+  InvalidProjectId,
+  Loading,
+} from '../components/Feedback'
 import { useAsync } from '../hooks/useAsync'
-import type { DiffEntry, DiffType } from '../api/types'
+import { useProjectId } from '../hooks/useProjectId'
+import type { DiffEntry, DiffSummary, DiffType } from '../api/types'
 
 const TABS: { value: DiffType; label: string }[] = [
   { value: 'only_schema', label: 'Nur Schema' },
@@ -21,8 +26,7 @@ const SEVERITY_CLASS: Record<string, string> = {
 
 /** Zeigt die Detailfelder eines Diff-Eintrags kompakt als Text. */
 function detailText(entry: DiffEntry): string {
-  // details_json kann fehlen, wenn das Backend keinen Wert geliefert hat
-  const details = entry.details_json ?? {}
+  const details = entry.details_json
   if (details.schema_wert !== undefined) {
     return `${details.schema_wert} → ${details.grundriss_wert}`
   }
@@ -30,26 +34,57 @@ function detailText(entry: DiffEntry): string {
 }
 
 export function DiffPage() {
-  const { projectId } = useParams<{ projectId: string }>()
-  const id = Number(projectId)
+  const projectId = useProjectId()
+  if (projectId === null) {
+    return <InvalidProjectId />
+  }
+  return <DiffView projectId={projectId} />
+}
+
+function DiffView({ projectId }: { projectId: number }) {
   const [tab, setTab] = useState<DiffType>('only_schema')
+  const [runs, setRuns] = useState(0)
+  const summary = useAsync(() => getDiffSummary(projectId), [projectId, runs])
+  const { data: entries, loading, error } = useAsync(
+    () => listDiff(projectId, tab),
+    [projectId, tab, runs],
+  )
+
+  return (
+    <section className="space-y-6">
+      <DiffToolbar
+        projectId={projectId}
+        onFinished={() => setRuns((value) => value + 1)}
+      />
+      {summary.data && <SummaryCards summary={summary.data} />}
+      <TabBar active={tab} onSelect={setTab} />
+
+      {loading && <Loading>Eintraege werden geladen…</Loading>}
+      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {entries?.length === 0 && (
+        <EmptyState>Keine Eintraege in dieser Kategorie.</EmptyState>
+      )}
+      {entries && entries.length > 0 && <DiffList entries={entries} />}
+    </section>
+  )
+}
+
+interface ToolbarProps {
+  projectId: number
+  onFinished: () => void
+}
+
+function DiffToolbar({ projectId, onFinished }: ToolbarProps) {
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
-  const [runs, setRuns] = useState(0)
-
-  const summary = useAsync(() => getDiffSummary(id), [id, runs])
-  const { data: entries, loading, error } = useAsync(
-    () => listDiff(id, tab),
-    [id, tab, runs],
-  )
 
   async function handleRun() {
     setBusy(true)
     setActionError(null)
     try {
-      await startMatching(id)
-      await startDiff(id)
-      setRuns((value) => value + 1)
+      await startMatching(projectId)
+      await startDiff(projectId)
+      onFinished()
     } catch (cause) {
       setActionError(cause instanceof Error ? cause.message : String(cause))
     } finally {
@@ -58,7 +93,7 @@ export function DiffPage() {
   }
 
   return (
-    <section className="space-y-6">
+    <>
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-slate-800">Abgleich</h2>
         <button
@@ -69,70 +104,77 @@ export function DiffPage() {
           {busy ? 'Abgleich laeuft…' : 'Matching + Diff starten'}
         </button>
       </div>
-
       {actionError && <ErrorMessage>{actionError}</ErrorMessage>}
+    </>
+  )
+}
 
-      {summary.data && (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {TABS.map((item) => (
-            <div
-              key={item.value}
-              className="rounded-md border border-slate-200 bg-white px-4 py-3"
-            >
-              <p className="text-xs uppercase tracking-wide text-slate-500">
-                {item.label}
-              </p>
-              <p className="text-2xl font-semibold text-slate-800">
-                {summary.data?.[item.value] ?? 0}
-              </p>
-            </div>
-          ))}
+function SummaryCards({ summary }: { summary: DiffSummary }) {
+  return (
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {TABS.map((item) => (
+        <div
+          key={item.value}
+          className="rounded-md border border-slate-200 bg-white px-4 py-3"
+        >
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            {item.label}
+          </p>
+          <p className="text-2xl font-semibold text-slate-800">
+            {summary[item.value] ?? 0}
+          </p>
         </div>
-      )}
+      ))}
+    </div>
+  )
+}
 
-      <div className="flex gap-1 border-b border-slate-200">
-        {TABS.map((item) => (
-          <button
-            key={item.value}
-            onClick={() => setTab(item.value)}
+interface TabBarProps {
+  active: DiffType
+  onSelect: (value: DiffType) => void
+}
+
+function TabBar({ active, onSelect }: TabBarProps) {
+  return (
+    <div className="flex gap-1 border-b border-slate-200">
+      {TABS.map((item) => (
+        <button
+          key={item.value}
+          onClick={() => onSelect(item.value)}
+          aria-current={active === item.value ? 'page' : undefined}
+          className={[
+            'px-4 py-2 text-sm transition-colors',
+            active === item.value
+              ? 'border-b-2 border-blue-600 font-medium text-blue-700'
+              : 'text-slate-500 hover:text-slate-700',
+          ].join(' ')}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function DiffList({ entries }: { entries: DiffEntry[] }) {
+  return (
+    <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
+      {entries.map((entry) => (
+        <li
+          key={entry.id}
+          className="flex items-center justify-between px-4 py-3 text-sm"
+        >
+          <span className="text-slate-800">{detailText(entry)}</span>
+          <span
             className={[
-              'px-4 py-2 text-sm transition-colors',
-              tab === item.value
-                ? 'border-b-2 border-blue-600 font-medium text-blue-700'
-                : 'text-slate-500 hover:text-slate-700',
+              'rounded-full px-2 py-0.5 text-xs font-medium',
+              SEVERITY_CLASS[entry.severity] ?? SEVERITY_CLASS.info,
             ].join(' ')}
           >
-            {item.label}
-          </button>
-        ))}
-      </div>
-
-      {loading && <Loading>Eintraege werden geladen…</Loading>}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-      {entries && entries.length === 0 && (
-        <EmptyState>Keine Eintraege in dieser Kategorie.</EmptyState>
-      )}
-
-      {entries && entries.length > 0 && (
-        <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
-          {entries.map((entry) => (
-            <li
-              key={entry.id}
-              className="flex items-center justify-between px-4 py-3 text-sm"
-            >
-              <span className="text-slate-800">{detailText(entry)}</span>
-              <span
-                className={[
-                  'rounded-full px-2 py-0.5 text-xs font-medium',
-                  SEVERITY_CLASS[entry.severity] ?? SEVERITY_CLASS.info,
-                ].join(' ')}
-              >
-                {entry.severity}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+            {entry.severity}
+          </span>
+        </li>
+      ))}
+    </ul>
   )
 }
